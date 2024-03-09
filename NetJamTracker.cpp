@@ -103,7 +103,8 @@ bool vibactive = false;
 bool vib_preview = false;
 bool pitch_note = false;
 bool pitch_preview = false;
-
+bool delay = false;
+bool delay_preview = false;
 
 float start_period = 0;
 float porta_value = 0;
@@ -116,6 +117,13 @@ int ticks = 0;
 int tickcount = 0;
 int tick_speed = 882;
 int period = 0;
+
+bool active_delays[8] = { true };
+int samp_delay = 0;  
+int delay_count = 0;
+int dindex = 0;
+int zi = 0;
+float zinc[8] = { 0 };
 
 
 float osc1[128];
@@ -231,6 +239,7 @@ HWND hWndCombo;
 HWND hWndCombo2;
 HWND hwndTrack[16];
 HWND listbox;
+HWND listbox2;
 LRESULT pos;
 HWND hChildPeak;
 HWND hWndPitch;
@@ -309,6 +318,7 @@ HBITMAP togon;
 HBITMAP vibnote;
 HBITMAP pitchnote;
 HBITMAP appregnote;
+HBITMAP delaynote;
 
 int piano_pat[128][24][128] = { 0 };
 int piano_effects[128][24][128] = { 0 };
@@ -417,6 +427,42 @@ static int patestCallback(const void* inputBuffer, void* outputBuffer,
     {
 
         output = 0;
+
+        if (delay_preview)
+        {
+
+          
+            delay_count++;
+
+            if (delay_count >= samp_delay)
+            {
+                delay_count = 0;
+
+                dindex++;
+
+                active_delays[dindex] = true;
+            }
+            
+
+            for (int chan = 0; chan < 8; chan++)
+            
+            {
+                if (active_delays[chan] == false) continue;
+
+                zi = (int)zinc[chan];
+
+                output += waveFloat[cur_chan][zi];
+
+                zinc[chan]++;
+
+                if (zinc[chan] >= bufferSize[cur_chan])
+                {
+                    active_delays[chan] = false;
+                }
+
+            }
+
+        }
 
 
         if (osc_preview)
@@ -720,7 +766,6 @@ static int patestCallback(const void* inputBuffer, void* outputBuffer,
                             
 
                         }
-                        break;
 
                         }
 
@@ -1001,11 +1046,11 @@ static int patestCallback(const void* inputBuffer, void* outputBuffer,
 
         peak_count++;
 
-        if (peak_count > 2940)
+        if (peak_count > 884)
         {
          peak_count = 0;
 
-         peakfloat /= 2940.0f;
+         peakfloat /= 884.0f;
             
          peak = peakfloat * 1000.0f;
 
@@ -1148,7 +1193,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     if (piano_note == NULL)
         MessageBox(hWndMain, L"Could not load UNLITBLUE", L"Error", MB_OK | MB_ICONEXCLAMATION);
 
+    delaynote = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_DELAY));
+    if (piano_note == NULL)
+        MessageBox(hWndMain, L"Could not load UNLITBLUE", L"Error", MB_OK | MB_ICONEXCLAMATION);
+
     
+
+
 
     play_mask.left = 0;
     play_mask.top = 0;
@@ -1597,6 +1648,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 NULL);
           
 
+            listbox2 = CreateWindowEx(0,
+                L"Listbox",
+                L"Listbox",
+                WS_CHILD | WS_VISIBLE | WS_HSCROLL | LBS_MULTICOLUMN | LBS_NOINTEGRALHEIGHT | WS_BORDER,
+                1200,
+                110,
+                500,
+                35,
+                hWnd,
+                NULL,
+                hInst,
+                NULL);
+
+
+            SendMessage(listbox2, WM_SETFONT, (WPARAM)hFont1,
+                NULL);
+
+            SendMessage(listbox2, LB_SETCOLUMNWIDTH, (WPARAM)28,
+                NULL);
+
+
+
         HWND hwndButton = CreateWindowEx(0,
             L"BUTTON",  // Predefined class; Unicode assumed 
             L"Insert",      // Button text 
@@ -1624,6 +1697,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             NULL);      // Pointer not needed.
 
 
+        HWND hwndButton5 = CreateWindowEx(0,
+            L"BUTTON",  // Predefined class; Unicode assumed 
+            L"Insert",      // Button text 
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
+            1320,         // x position 
+            110,         // y position 
+            60,        // Button width
+            18,        // Button height
+            hWnd,     // Parent window
+            (HMENU)IDC_INSERT2,       // No menu.
+            hInst,
+            NULL);      // Pointer not needed.
+
+        HWND hwndButton6 = CreateWindowEx(0,
+            L"BUTTON",  // Predefined class; Unicode assumed 
+            L"Delete",      // Button text 
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,  // Styles 
+            1320,         // x position 
+            128,         // y position 
+            60,        // Button width
+            18,        // Button height
+            hWnd,     // Parent window
+            (HMENU)IDC_DELETE2,       // No menu.
+            hInst,
+            NULL);      // Pointer not needed.
+
+
+
             hWndComboBox = CreateWindowEx(0, WC_COMBOBOX, TEXT(""),
             CBS_DROPDOWN | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
             450, 0, 120, 300, hWnd, (HMENU) IDC_EFFECT, hInst,
@@ -1634,6 +1735,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SendMessage(hWndComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)L"Pitch Slide Up");
             SendMessage(hWndComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)L"Pitch Slide Down");
             SendMessage(hWndComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)L"Vibrato");
+            SendMessage(hWndComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)L"Delay");
 
             SendMessage(hWndComboBox, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 
@@ -1785,6 +1887,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
                 break;
 
+                case 5: // Delay
+                {
+
+                    piano = false;
+                    apreggio = false;
+                    vibactive = false;
+                    pitch_note = false;
+                    delay = true;
+
+                    for (int i = 0; i < 16; i++)
+                    {
+                        textlength = wsprintf(str, L"Delay %d", i);
+
+                        SendMessage(hWndComboParam, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)str);
+                    }
+                }
+                break;
                 }
 
                 SendMessage(hWndComboParam, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
@@ -2765,6 +2884,20 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
         }
 
+        if (delay)
+        {
+
+            piano_pat[cur_pat][cur_chan][xPos / 34 + xNewPos] = yPos / 12 + octave;
+
+            piano_effects[cur_pat][cur_chan][xPos / 34 + xNewPos] = 5;
+
+            effect_param[cur_pat][cur_chan][xPos / 34 + xNewPos] = porta_value;
+
+            samp_delay = SAMPLE_RATE * 0.7f;
+
+            if (chan_active[cur_chan] == true) delay_preview = true;
+
+        }
 
 
 
@@ -2871,6 +3004,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 break;
             }
 
+            case 5:
+            {
+                GetObject(delaynote, sizeof(bm), &bm);
+                SelectObject(Memhdc, delaynote);
+                break;
+            }
 
             }
 

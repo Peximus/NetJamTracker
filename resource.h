@@ -47,6 +47,8 @@
 #define IDD_OSC                         159
 #define IDB_APPREGNOTE                  160
 #define IDD_DONATE                      162
+#define IDB_BITMAP4                     163
+#define IDB_DELAY                       163
 #define IDC_INSERT                      500
 #define IDC_DELETE                      501
 #define IDC_EDIT                        502
@@ -54,6 +56,8 @@
 #define IDC_TEXT                        503
 #define IDC_EFFECT                      504
 #define IDC_OSC                         505
+#define IDC_INSERT2                     506
+#define IDC_DELETE2                     507
 #define IDC_SLIDER1                     1001
 #define IDC_EDIT1                       1002
 #define IDC_SLIDER2                     1003
@@ -86,7 +90,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        163
+#define _APS_NEXT_RESOURCE_VALUE        164
 #define _APS_NEXT_COMMAND_VALUE         32777
 #define _APS_NEXT_CONTROL_VALUE         1027
 #define _APS_NEXT_SYMED_VALUE           110

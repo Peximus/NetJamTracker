@@ -153,6 +153,7 @@
     <Image Include="Images\chan.bmp" />
     <Image Include="Images\chanblank.bmp" />
     <Image Include="Images\circle.bmp" />
+    <Image Include="Images\delaynote.bmp" />
     <Image Include="Images\down.bmp" />
     <Image Include="Images\image.bmp" />
     <Image Include="Images\len.bmp" />

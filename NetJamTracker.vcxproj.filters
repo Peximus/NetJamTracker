@@ -138,5 +138,8 @@
     <Image Include="Images\appregnote.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="Images\delaynote.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>
