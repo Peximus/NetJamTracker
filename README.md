@@ -9,7 +9,7 @@ Effects:
 Apreggio
 Pitch Slide
 Vibrato
-
+Delay - BETA
 
 Must set sample Rate to 44100Hz in Sound Settings.
 
